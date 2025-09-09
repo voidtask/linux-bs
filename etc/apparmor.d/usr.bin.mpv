@@ -1,0 +1,218 @@
+#include <tunables/global>
+
+@{MPV_BIN} = /usr/bin/mpv
+@{MPV_HOME_MEDIA} = @{HOME}/Videos/ @{HOME}/Music/ @{HOME}/Downloads/
+@{MPV_MEDIA_ROOTS} = /.my-disks/ /.my-subvols/media/
+@{MPV_SCREENSHOT_DIR} = @{HOME}/Pictures/
+
+profile mpv @{MPV_BIN} flags=(attach_disconnected) {
+
+  deny capability,
+
+  # No Internet (only local unix sockets: Wayland, PipeWire, DBus)
+  deny network inet,
+  deny network inet6,
+  deny network raw,
+  deny network packet,
+  network unix,
+
+  @{MPV_BIN}                mrix,
+  /usr/bin/                 r,
+  deny /usr/bin/python*     x,
+  deny /usr/bin/wget        x,
+  deny /usr/bin/curl        x,
+  deny /usr/bin/yt-dlp      x,
+  deny /usr/bin/youtube-dl  x,
+
+  /lib/                     r,
+  /lib/**                   mr,
+  /usr/lib/                 r,
+  /usr/lib/**               mr,
+  /usr/lib64/**             mr,
+  /usr/lib/dri/**           mr,
+  /usr/lib/vulkan/**        mr,
+  /usr/share/glvnd/**       r,
+
+  # System & data (read-only)
+  /etc/                       r,
+  /etc/ld.so.cache            r,
+  /etc/ld.so.conf             r,
+  /etc/ld.so.conf.d/**        r,
+  /etc/localtime              r,
+  /etc/fonts/**               r,
+  /etc/machine-id             r,
+  /var/lib/dbus/machine-id    r,
+  /usr/share/fonts/           r,
+  /usr/share/fonts/**         r,
+  /usr/share/fontconfig/**    r,
+  /usr/share/locale/**        r,
+  /usr/lib/locale/**          r,
+  /usr/share/terminfo/**      r,
+  /usr/share/zoneinfo/**      r,
+  /usr/share/mpv/**           r,
+  /usr/share/drirc            r,
+  /etc/drirc                  r,
+  /usr/share/icons/**         r,
+  /usr/share/X11/rgb.txt      r,
+  /etc/nsswitch.conf          r,
+  /etc/hosts                  r,
+  /etc/resolv.conf            r,
+  /etc/passwd                 r,
+  /etc/group                  r,
+  /etc/gnutls/config          r,
+  deny /etc/shadow            r,
+
+  # System mpv (encoding profiles)
+  /etc/mpv/                   r,
+  /etc/mpv/**                 r,
+
+  # PipeWire system config
+  /etc/pipewire/              r,
+  /etc/pipewire/**            r,
+
+  # Vulkan layer discovery (EGL / probing)
+  /usr/share/vulkan/          r,
+  /usr/share/vulkan/**        r,
+
+  # Audio (PipeWire + pulse)
+  /usr/share/alsa/**                  r,
+  /etc/asound.conf                    r,
+  owner @{HOME}/.asoundrc             r,
+  /usr/share/pipewire/**              r,
+  /usr/share/wireplumber/**           r,
+  /usr/share/pipewire-media-session/** r,
+  owner @{HOME}/.config/pipewire/**   r,
+  owner @{HOME}/.config/pulse/**      r,
+  /run/user/*/pulse/                  rw,
+  /run/user/*/pulse/native            rw,
+  /run/user/*/pulse/config            r,
+  /run/user/*/pipewire-0              rw,
+  /run/user/*/pipewire-0**            rw,
+  /run/pipewire-0                     rw,
+
+  # Devices (Wayland + NVIDIA)
+  /dev/null               rw,
+  /dev/zero               rw,
+  /dev/random             r,
+  /dev/urandom            r,
+  /dev/dri/               r,
+  /dev/dri/*              rw,
+  /dev/snd/               r,
+  /dev/snd/**             rw,
+  /dev/nvidia*            rw,
+  deny /dev/input/**      rw,
+  deny /dev/tty           rw,
+
+  # Wayland / IPC
+  /run/user/*/wayland-*      rw,
+  /run/user/*/bus            rw,
+  deny /run/systemd/private  rw,
+
+  # X11 fallback probe (harmless; keep to silence "Authorization required" if used)
+  /tmp/.X11-unix/X*          rw,
+  owner @{HOME}/.Xauthority  r,
+
+  # GPU / system info
+  /sys/class/drm/                r,
+  /sys/class/drm/**              r,
+  /sys/devices/pci**/**          r,
+  /proc/driver/nvidia/**         r,
+  /proc/sys/kernel/random/uuid   r,
+
+  # CPU topology (remove previous denial)
+  /sys/devices/system/cpu/         r,
+  /sys/devices/system/cpu/possible r,
+  /sys/devices/system/cpu/present  r,
+  /sys/devices/system/cpu/online   r,
+
+  # udev metadata (device probing)
+  /run/udev/data/             r,
+  /run/udev/data/*            r,
+
+  # (Uncomment only if future EGL failures persist)
+  # /sys/module/**                r,
+  # /sys/devices/virtual/dmi/id/  r,
+  # /sys/devices/virtual/dmi/id/** r,
+
+  # Immutable mpv config (read-only)
+  owner @{HOME}/.config/                 r,
+  owner @{HOME}/.config/mpv/             r,
+  owner @{HOME}/.config/mpv/**           r,
+  deny  @{HOME}/.config/mpv/**           wklx,
+
+  # NVIDIA / GL shader caches
+  owner @{HOME}/.nv/                 rw,
+  owner @{HOME}/.nv/GLCache/         rw,
+  owner @{HOME}/.nv/GLCache/**       rwk,
+
+  # Fontconfig (user + caches)
+  owner @{HOME}/.config/fontconfig/      r,
+  owner @{HOME}/.config/fontconfig/**    r,
+  owner @{HOME}/.cache/fontconfig/       rw,
+  owner @{HOME}/.cache/fontconfig/**     rwk,
+  owner @{HOME}/.local/share/fonts/      r,
+  owner @{HOME}/.local/share/fonts/**    r,
+  /var/cache/fontconfig/                 r,
+  /var/cache/fontconfig/**               r,
+
+  # Shader / GPU caches (Mesa/Vulkan)
+  owner @{HOME}/.cache/                      rw,
+  owner @{HOME}/.cache/mesa_shader_cache_db* rwk,
+  owner @{HOME}/.cache/mesa_shader_cache/    rw,
+  owner @{HOME}/.cache/mesa_shader_cache/**  rwk,
+  owner @{HOME}/.cache/mesa/**               rw,
+  owner @{HOME}/.cache/mesa/**/**            rwk,
+  owner @{HOME}/.cache/vulkan/               rw,
+  owner @{HOME}/.cache/vulkan/**             rwk,
+
+  # Screenshots
+  owner @{MPV_SCREENSHOT_DIR}       rw,
+  owner @{MPV_SCREENSHOT_DIR}**     rwk,
+
+  # Media inside HOME
+  owner @{MPV_HOME_MEDIA}           r,
+  owner @{MPV_HOME_MEDIA}**         r,
+
+  # External media roots
+  @{MPV_MEDIA_ROOTS}                r,
+  @{MPV_MEDIA_ROOTS}**              r,
+
+  # Sensitive denies
+  deny @{HOME}/.ssh/**              r,
+  deny @{HOME}/.gnupg/**            r,
+  deny @{HOME}/.password-store/**   r,
+  deny @{HOME}/.local/share/keyrings/** r,
+  deny @{HOME}/.config/kwallet*/*   r,
+  deny @{HOME}/.config/keepass*/**  r,
+  deny @{HOME}/.mozilla/**          r,
+  deny @{HOME}/.thunderbird/**      r,
+  deny @{HOME}/.config/chromium/**  r,
+  deny @{HOME}/.config/google-chrome/** r,
+  deny @{HOME}/.config/BraveSoftware/** r,
+  deny @{HOME}/.config/Code/**      r,
+  deny @{HOME}/.config/ssh/**       r,
+  deny @{HOME}/.config/git/**       r,
+  deny @{HOME}/.netrc               r,
+  deny @{HOME}/.pki/**              r,
+  deny @{HOME}/.aws/**              r,
+  deny @{HOME}/.config/rclone/**    r,
+  deny @{HOME}/.kube/**             r,
+  deny /root/**                     r,
+
+  # Temporary
+  /tmp/                 rw,
+  /tmp/**               rwk,
+  deny /var/tmp/**      rwk,
+
+  # /proc (limited)
+  /proc/                   r,
+  /proc/cpuinfo            r,
+  /proc/meminfo            r,
+  /proc/self/              r,
+  /proc/self/**            r,
+  /proc/sys/fs/inotify/**  r,
+  /proc/sys/vm/*           r,
+  deny /proc/[1-9]*/**     r,
+
+  deny ptrace (read, trace),
+}
