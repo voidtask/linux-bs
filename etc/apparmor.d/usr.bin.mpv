@@ -140,6 +140,9 @@ profile mpv @{MPV_BIN} flags=(attach_disconnected) {
   owner @{HOME}/.config/mpv/**           r,
   deny  @{HOME}/.config/mpv/**           wklx,
 
+  # usr-dirs
+  owner @{HOME}/.config/user-dirs.dirs   r,
+
   # NVIDIA / GL shader caches
   owner @{HOME}/.nv/                 rw,
   owner @{HOME}/.nv/GLCache/         rw,
@@ -164,6 +167,8 @@ profile mpv @{MPV_BIN} flags=(attach_disconnected) {
   owner @{HOME}/.cache/mesa/**/**            rwk,
   owner @{HOME}/.cache/vulkan/               rw,
   owner @{HOME}/.cache/vulkan/**             rwk,
+  owner @{HOME}/.cache/mpv/                  rw,
+  owner @{HOME}/.cache/mpv/**                rwk,
 
   # Screenshots
   owner @{MPV_SCREENSHOT_DIR}       rw,
@@ -216,3 +221,4 @@ profile mpv @{MPV_BIN} flags=(attach_disconnected) {
 
   deny ptrace (read, trace),
 }
+
